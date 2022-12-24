@@ -1,66 +1,48 @@
 import throttle from 'lodash.throttle';
+    
+const formRef = document.querySelector('.feedback-form');
+    
+const FORM_KEY_LS = 'feedback-form-state';
+    
+const getFormDataFromLS = key => JSON.parse(localStorage.getItem(key)); ////
 
-const formRef = document.querySelector(".feedback-form");
-
-formRef.addEventListener("input", throttle(formInput,500));
-
-formRef.addEventListener("submit", onFormSubmit);
-
-console.log("formRef",formRef);
- 
-const STORAGE_KEY = "feedback-form-state";
-
-const formData = {
-    email: "",
-    message:"",
+const setFormDataToLS = event => {
+  const formData = {
+    email: formRef.elements.email.value,
+    message: formRef.elements.message.value,
+  };
+  localStorage.setItem(FORM_KEY_LS, JSON.stringify(formData));
 };
 
-getInfoLocalStorage();
+const removeFormDataFromLS = key => {
+  localStorage.removeItem(key);
+};
 
-function formInput(element) {
+const setFormDataToForm = form => {
+  const formData = getFormDataFromLS(FORM_KEY_LS);
+  if (!formData) {
+    return;
+  }
+  for (const key in formData) {
+    form.elements[key].value = formData[key];
+  }
+};
 
-    formData[element.target.name] = element.target.value;
-     
-    const formDataJson = JSON.stringify(formData);
-    
-    localStorage.setItem(STORAGE_KEY, formDataJson);
-    
-}
-    
-    function onFormSubmit(element) {
-        element.preventDefault();
-        
-        console.log(element.target.value);
+const onSubmitForm = event => {
+  event.preventDefault();
 
-        console.log("formData", formData);
+  const formData = {
+    email: formRef.email.value,
+    message: formRef.message.value,
+  };
 
-        for (const key in formData) {
-            
-        if (formData[key] === "") {
-                return;
-            }
-        element.target.reset();
-    
-        localStorage.removeItem(STORAGE_KEY);
-        }
-}
+  console.log(formData);
 
-function getInfoLocalStorage() {
-    console.log("formData", formData);
-    
-    const savedInputInfo = localStorage.getItem(STORAGE_KEY);
-    console.log("savedInputInfo", savedInputInfo);
+  event.currentTarget.reset();
+  removeFormDataFromLS(FORM_KEY_LS);
+};
 
-    const objectFromlocalStorage = JSON.parse(savedInputInfo);
-    console.log("objectFromlocalStorage",objectFromlocalStorage);
-   
-    if (!objectFromlocalStorage) {
-        return;
-    }
+setFormDataToForm(formRef);
 
-    for (const key in objectFromlocalStorage) {
-
-    formRef.elements[key].value = objectFromlocalStorage[key];
-   }
-
-}
+formRef.addEventListener('input', throttle(setFormDataToLS, 500));
+formRef.addEventListener('submit', onSubmitForm);
